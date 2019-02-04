@@ -17,6 +17,16 @@ namespace SolrNet.Impl.FacetQuerySerializers {
                 yield return KV.Create("facet.pivot", string.Join(",", pivotQ.ToArray()));
             if (q.MinCount.HasValue)
                 yield return KV.Create("facet.pivot.mincount", q.MinCount.ToString());
+
+            foreach (var pivotQ in q.Fields)
+            {
+                string name = "pivot." + string.Join(",", pivotQ.ToArray());
+                string value = "{" + string.Join(",facet:{",
+                    pivotQ.ToArray().Select(f => string.Format("'{0}':{{type:'terms',limit:-1,field:'{1}'", name, f))
+                    ) + new string('}', pivotQ.Count() * 2);
+
+                yield return KV.Create("json.facet", value);
+            }
         }
     }
 }

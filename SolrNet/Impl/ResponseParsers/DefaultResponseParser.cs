@@ -10,6 +10,7 @@ namespace SolrNet.Impl.ResponseParsers {
                 new ResultsResponseParser<T>(docParser),
                 new HeaderResponseParser<T>(),
                 new FacetsResponseParser<T>(),
+                new FacetsNewResponseParser<T>(),
                 new HighlightingResponseParser<T>(),
                 new MoreLikeThisResponseParser<T>(docParser),
                 new SpellCheckResponseParser<T>(),
