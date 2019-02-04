@@ -27,6 +27,8 @@ namespace SolrNet.Impl.ResponseParsers {
     /// </summary>
     /// <typeparam name="T">Document type</typeparam>
     public class FacetsResponseParser<T> : ISolrAbstractResponseParser<T> {
+        private StatsResponseParser<T> _statsParser = new StatsResponseParser<T>();
+
         public void Parse(XDocument xml, AbstractSolrQueryResults<T> results) {
             var mainFacetNode = xml.Element("response")
                 .Elements("lst")
@@ -270,8 +272,13 @@ namespace SolrNet.Impl.ResponseParsers {
 				}
 			}
 
-
-			return pivot;
+            var statsNode = node.Elements("lst").FirstOrDefault(X.AttrEq("name", "stats"));
+            if (statsNode != null)
+            {
+                pivot.Stats = _statsParser.ParseStats(statsNode, "stats_fields");
+            }
+            
+            return pivot;
 		}
 
     }

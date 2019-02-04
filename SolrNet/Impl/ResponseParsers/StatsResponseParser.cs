@@ -58,8 +58,10 @@ namespace SolrNet.Impl.ResponseParsers {
             var d = new Dictionary<string, StatsResult>();
             var mainNode = node.XPathSelectElement(string.Format("lst[@name='{0}']", selector));
             foreach (var n in mainNode.Elements()) {
-                var name = n.Attribute("name").Value;
-                d[name] = ParseStatsNode(n);
+                if (n.Attribute("name") != null) {
+                    var name = n.Attribute("name").Value;
+                    d[name] = ParseStatsNode(n);
+                }
             }
 
             return d;

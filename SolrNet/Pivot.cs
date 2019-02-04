@@ -24,6 +24,8 @@ namespace SolrNet {
 
         public bool HasChildPivots { get; set; }
 
+        public Dictionary<string, StatsResult> Stats { get; set; }
+
         /// <summary>
         /// Pivot facet
         /// </summary>
