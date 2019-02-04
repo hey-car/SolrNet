@@ -15,6 +15,7 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using SolrNet.Exceptions;
@@ -25,23 +26,36 @@ namespace SolrNet.Impl.FieldSerializers {
     /// </summary>
     public class AggregateFieldSerializer : ISolrFieldSerializer {
         private readonly IEnumerable<ISolrFieldSerializer> serializers;
+        private readonly ConcurrentDictionary<Type, ISolrFieldSerializer> cachedSerializerCache;
 
         public AggregateFieldSerializer(IEnumerable<ISolrFieldSerializer> serializers) {
             this.serializers = serializers;
+            this.cachedSerializerCache = new ConcurrentDictionary<Type, ISolrFieldSerializer>();
         }
 
         public bool CanHandleType(Type t) {
-            return serializers.Any(s => s.CanHandleType(t));
+            return GetSerializer(t) != null;
         }
 
         public IEnumerable<PropertyNode> Serialize(object obj) {
             if (obj == null)
                 return null;
             var type = obj.GetType();
-            foreach (var s in serializers)
-                if (s.CanHandleType(type))
-                    return s.Serialize(obj);
+            var s = GetSerializer(type);
+            if (s != null)
+                return s.Serialize(obj);
             throw new TypeNotSupportedException(string.Format("Couldn't serialize type '{0}'", type));
+        }
+
+        private ISolrFieldSerializer GetSerializer(Type t)
+        {
+            ISolrFieldSerializer result;
+            if (!cachedSerializerCache.TryGetValue(t, out result))
+            {
+                result = serializers.FirstOrDefault(s => s.CanHandleType(t));
+                cachedSerializerCache[t] = result;
+            }
+            return result;
         }
     }
 }

@@ -15,6 +15,7 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -26,6 +27,9 @@ namespace SolrNet.Impl.FieldParsers {
     /// </summary>
     public class AggregateFieldParser : ISolrFieldParser {
         private readonly IEnumerable<ISolrFieldParser> parsers;
+        private readonly ConcurrentDictionary<Tuple<Type, string>, ISolrFieldParser> cachedParserCache;
+        private readonly ConcurrentDictionary<Type, bool> cachedHandleableTypes;
+        private readonly ConcurrentDictionary<string, bool> cachedHandleableSolrTypes;
 
         /// <summary>
         /// Aggregates <see cref="ISolrFieldParser"/>s
@@ -33,21 +37,59 @@ namespace SolrNet.Impl.FieldParsers {
         /// <param name="parsers"></param>
         public AggregateFieldParser(IEnumerable<ISolrFieldParser> parsers) {
             this.parsers = parsers;
+
+            this.cachedParserCache = new ConcurrentDictionary<Tuple<Type, string>, ISolrFieldParser>();
+            this.cachedHandleableTypes = new ConcurrentDictionary<Type, bool>();
+            this.cachedHandleableSolrTypes = new ConcurrentDictionary<string, bool>();
         }
 
-        public bool CanHandleSolrType(string solrType) {
-            return parsers.Any(p => p.CanHandleSolrType(solrType));
+        public bool CanHandleSolrType(string solrType)
+        {
+            if (cachedHandleableSolrTypes.ContainsKey(solrType))
+                return true;
+
+            if (parsers.Any(p => p.CanHandleSolrType(solrType)))
+            {
+                cachedHandleableSolrTypes[solrType] = true;
+                return true;
+            }
+
+            return false;
         }
 
-        public bool CanHandleType(Type t) {
-            return parsers.Any(p => p.CanHandleType(t));
+        public bool CanHandleType(Type t)
+        {
+            if (cachedHandleableTypes.ContainsKey(t))
+                return true;
+
+            if (parsers.Any(p => p.CanHandleType(t)))
+            {
+                cachedHandleableTypes[t] = true;
+                return true;
+            }
+
+            return false;
         }
 
         public object Parse(XElement field, Type t) {
-            return parsers
-                .Where(p => p.CanHandleType(t) && p.CanHandleSolrType(field.Name.LocalName))
-                .Select(p => p.Parse(field, t))
-                .FirstOrDefault();
+            var parser = GetParser(t, field.Name.LocalName);
+            if (parser == null)
+                return null;
+
+            return parser.Parse(field, t);
+        }
+
+        private ISolrFieldParser GetParser(Type t, string solrType)
+        {
+            var key = Tuple.Create(t, solrType);
+            ISolrFieldParser result;
+            if (!cachedParserCache.TryGetValue(key, out result))
+            {
+                result = parsers.FirstOrDefault(p => p.CanHandleType(t) && p.CanHandleSolrType(solrType));
+                cachedParserCache[key] = result;
+            }
+
+            return result;
         }
     }
 }
