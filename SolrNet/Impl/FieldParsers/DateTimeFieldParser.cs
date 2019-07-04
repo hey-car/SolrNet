@@ -50,7 +50,7 @@ namespace SolrNet.Impl.FieldParsers {
 
             if (result.Kind == DateTimeKind.Unspecified)
             {
-                result = DateTime.SpecifyKind(result, DateTimeKind.Utc);
+                result = DateTime.SpecifyKind(result, DateTimeKind.Utc).ToLocalTime();
             }
 
             return result;
