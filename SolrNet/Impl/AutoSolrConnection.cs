@@ -7,21 +7,46 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using HttpWebAdapters;
 using SolrNet.Exceptions;
+using SolrNet.Utils;
 
 namespace SolrNet.Impl
 {
+    /// <summary>
+    /// Manages asynchronous and synchronous connections with Solr.
+    /// </summary>
     public class AutoSolrConnection : IStreamSolrConnection, IDisposable
     {
         private const string version = "2.2";
 
+        /// <summary>
+        /// Manages HTTP connection with Solr
+        /// </summary>
+        /// <param name="serverUrl">URL to Solr</param>
         public AutoSolrConnection(string serverUrl) : this(serverUrl, credentials: null)
         {
-
-
         }
 
-        public AutoSolrConnection(string serverUrl, ICredentials credentials) : this(serverUrl, httpClient: null)
+        /// <summary>
+        /// Manages HTTP connection with Solr
+        /// 
+        /// Note that this constructor uses <see cref="HttpWebAdapters.HttpWebRequestFactory"/> and thus doesn't support basic authentication and such
+        /// Please use <see cref="AutoSolrConnection(string, ICredentials, IHttpWebRequestFactory)"/>
+        /// </summary>
+        /// <param name="serverUrl">URL to Solr</param>
+        /// <param name="credentials">Credentials to be used in asynchronous calls</param>
+        public AutoSolrConnection(string serverUrl, ICredentials credentials) : this(serverUrl, credentials, new HttpWebRequestFactory())
+        {
+        }
+
+        /// <summary>
+        /// Manages HTTP connection with Solr
+        /// </summary>
+        /// <param name="serverUrl">URL to Solr</param>
+        /// <param name="credentials">Credentials to be used in asynchronous calls</param>
+        /// <param name="httpWebRequestFactory">Request factory to be used in synchronous fallback connections</param>
+        public AutoSolrConnection(string serverUrl, ICredentials credentials, IHttpWebRequestFactory httpWebRequestFactory)
         {
             var httpClientHandler = new HttpClientHandler
             {
@@ -31,18 +56,38 @@ namespace SolrNet.Impl
 
             this.HttpClient = new HttpClient(httpClientHandler);
 
+            this.SyncFallbackConnection = new PostSolrConnection(new SolrConnection(serverUrl, httpWebRequestFactory), serverUrl, httpWebRequestFactory);
+            this.ServerURL = Utils.UriValidator.ValidateHTTP(serverUrl);
         }
 
-
-        public AutoSolrConnection(string serverUrl, HttpClient httpClient)
+        /// <summary>
+        /// Manages HTTP connection with Solr
+        /// 
+        /// Note that this constructor uses <see cref="HttpWebAdapters.HttpWebRequestFactory"/> and thus doesn't support basic authentication and such
+        /// Please use <see cref="AutoSolrConnection(string, HttpClient, IHttpWebRequestFactory)"/>
+        /// </summary>
+        /// <param name="serverUrl">URL to Solr</param>
+        /// <param name="httpClient">HttpClient used in asynchronous connections</param>
+        public AutoSolrConnection(string serverUrl, HttpClient httpClient) : this(serverUrl, httpClient, new HttpWebRequestFactory())
         {
-            this.SyncFallbackConnection = new PostSolrConnection(new SolrConnection(serverUrl), serverUrl);
+        }
+
+        /// <summary>
+        /// Manages HTTP connection with Solr
+        /// </summary>
+        /// <param name="serverUrl">URL to Solr</param>
+        /// <param name="httpClient">HttpClient used in asynchronous connections</param>
+        /// <param name="httpWebRequestFactory">Request factory to be used in synchronous fallback connections</param>
+        public AutoSolrConnection(string serverUrl, HttpClient httpClient, IHttpWebRequestFactory httpWebRequestFactory)
+        {
+            this.SyncFallbackConnection = new PostSolrConnection(new SolrConnection(serverUrl, httpWebRequestFactory), serverUrl, httpWebRequestFactory);
             this.ServerURL = Utils.UriValidator.ValidateHTTP(serverUrl);
             this.HttpClient = httpClient;
-
-
         }
 
+        /// <summary>
+        /// Connection used in synchrounous calls.
+        /// </summary>
         private PostSolrConnection SyncFallbackConnection { get; }
 
         /// <summary>
@@ -60,8 +105,10 @@ namespace SolrNet.Impl
         /// </summary>
         public int MaxUriLength { get; set; } = 7600;
 
+        /// <inheritdoc />
         public string Get(string relativeUrl, IEnumerable<KeyValuePair<string, string>> parameters) => SyncFallbackConnection.Get(relativeUrl, parameters);
 
+        /// <inheritdoc />
         public async Task<string> GetAsync(string relativeUrl, IEnumerable<KeyValuePair<string, string>> parameters, CancellationToken cancellationToken = default(CancellationToken))
         {
             using (var responseStream = await GetAsStreamAsync(relativeUrl, parameters, cancellationToken))
@@ -70,8 +117,8 @@ namespace SolrNet.Impl
                 return await sr.ReadToEndAsync();
             }
         }
-
-
+        
+        /// <inheritdoc />
         public async Task<Stream> GetAsStreamAsync(string relativeUrl, IEnumerable<KeyValuePair<string, string>> parameters, CancellationToken cancellationToken)
         {
             var u = new UriBuilder(ServerURL);
@@ -79,7 +126,7 @@ namespace SolrNet.Impl
             u.Query = GetQuery(parameters);
 
             HttpResponseMessage response;
-            if (u.Uri.ToString().Length > MaxUriLength)
+            if (UriValidator.UriLength(u) > MaxUriLength)
             {
                 u.Query = null;
                 response = await HttpClient.PostAsync(u.Uri, new FormUrlEncodedContent(parameters), cancellationToken);
@@ -88,15 +135,19 @@ namespace SolrNet.Impl
                 response = await HttpClient.GetAsync(u.Uri, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
-                throw new SolrConnectionException($"{response.StatusCode}: {response.ReasonPhrase}", null, u.Uri.ToString());
+                throw new SolrConnectionException(await response.Content.ReadAsStringAsync(), null, u.Uri.ToString());
 
             return await response.Content.ReadAsStreamAsync();
 
         }
+        
+        /// <inheritdoc />
         public string Post(string relativeUrl, string s) => SyncFallbackConnection.Post(relativeUrl, s);
 
+        /// <inheritdoc />
         public Task<string> PostAsync(string relativeUrl, string s) => PostAsync(relativeUrl, s, CancellationToken.None);
 
+        /// <inheritdoc />
         public async Task<string> PostAsync(string relativeUrl, string s, CancellationToken cancellationToken)
         {
             var bytes = Encoding.UTF8.GetBytes(s);
@@ -110,8 +161,10 @@ namespace SolrNet.Impl
             }
         }
 
+        /// <inheritdoc />
         public string PostStream(string relativeUrl, string contentType, Stream content, IEnumerable<KeyValuePair<string, string>> getParameters) => SyncFallbackConnection.PostStream(relativeUrl, contentType, content, getParameters);
 
+        /// <inheritdoc />
         public async Task<string> PostStreamAsync(string relativeUrl, string contentType, Stream content, IEnumerable<KeyValuePair<string, string>> getParameters)
         {
             using (var responseStream = await PostStreamAsStreamAsync(relativeUrl, contentType, content, getParameters, CancellationToken.None))
@@ -122,6 +175,7 @@ namespace SolrNet.Impl
         }
 
 
+        /// <inheritdoc />
         public async Task<Stream> PostStreamAsStreamAsync(string relativeUrl, string contentType, Stream content, IEnumerable<KeyValuePair<string, string>> getParameters, CancellationToken cancellationToken)
         {
             var u = new UriBuilder(ServerURL);
@@ -129,12 +183,13 @@ namespace SolrNet.Impl
             u.Query = GetQuery(getParameters);
 
             var sc = new StreamContent(content);
-            sc.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse(contentType);
+            if(contentType != null)
+                sc.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse(contentType);
 
             var response = await HttpClient.PostAsync(u.Uri, sc);
 
             if (!response.IsSuccessStatusCode)
-                throw new SolrConnectionException($"{response.StatusCode}: {response.ReasonPhrase}", null, u.Uri.ToString());
+                throw new SolrConnectionException(await response.Content.ReadAsStringAsync(), null, u.Uri.ToString());
 
             return await response.Content.ReadAsStreamAsync();
         }
@@ -169,6 +224,7 @@ namespace SolrNet.Impl
         }
 
 
+        /// <inheritdoc />
         public void Dispose()
         {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.

@@ -10,19 +10,22 @@ using System.Configuration;
 #endif
 
 using StructureMap.SolrNetIntegration.Config;
+using Xunit.Abstractions;
 
 namespace StructureMap.SolrNetIntegration.Tests {
     
     [Trait("Category","Integration")]
     public class StructureMapIntegrationFixture {
+        private readonly ITestOutputHelper testOutputHelper;
 
         private readonly IContainer Container;
 
-        public StructureMapIntegrationFixture()
+        public StructureMapIntegrationFixture(ITestOutputHelper testOutputHelper)
         {
+            this.testOutputHelper = testOutputHelper;
             var servers = new List<SolrServer>
             {
-                new SolrServer ("entity","http://localhost:8983/solr/collection1", "StructureMap.SolrNetIntegration.Tests.Entity, StructureMap.SolrNetIntegration.Tests"),
+                new SolrServer ("entity","http://localhost:8983/solr/entity1", "StructureMap.SolrNetIntegration.Tests.Entity, StructureMap.SolrNetIntegration.Tests"),
                 new SolrServer ("entity2","http://localhost:8983/solr/core0", "StructureMap.SolrNetIntegration.Tests.Entity2, StructureMap.SolrNetIntegration.Tests"),
                 new SolrServer ("entity3","http://localhost:8983/solr/core1", "StructureMap.SolrNetIntegration.Tests.Entity2, StructureMap.SolrNetIntegration.Tests")
             };
@@ -34,7 +37,7 @@ namespace StructureMap.SolrNetIntegration.Tests {
         {
             var solr = Container.GetInstance<ISolrOperations<Entity>>();
             solr.Ping();
-            Console.WriteLine(solr.Query(SolrQuery.All).Count);
+            testOutputHelper.WriteLine(solr.Query(SolrQuery.All).Count.ToString());
         }
 
         [Fact]
@@ -57,7 +60,7 @@ namespace StructureMap.SolrNetIntegration.Tests {
             {
                 Assert.True(d.Count > 0);
                 foreach (var kv in d)
-                    Console.WriteLine("{0}: {1}", kv.Key, kv.Value);
+                    testOutputHelper.WriteLine("{0}: {1}", kv.Key, kv.Value);
             }
         }
 
@@ -80,8 +83,7 @@ namespace StructureMap.SolrNetIntegration.Tests {
             {
                 {"id", "ababa"},
                 {"manu", "who knows"},
-                {"popularity", 55},
-                {"timestamp", DateTime.UtcNow},
+                {"popularity", 55}
             });
         }
     }

@@ -43,6 +43,7 @@ namespace SolrNet.Impl.FieldParsers {
             this.cachedHandleableSolrTypes = new ConcurrentDictionary<string, bool>();
         }
 
+        /// <inheritdoc />
         public bool CanHandleSolrType(string solrType)
         {
             if (cachedHandleableSolrTypes.ContainsKey(solrType))
@@ -57,6 +58,7 @@ namespace SolrNet.Impl.FieldParsers {
             return false;
         }
 
+        /// <inheritdoc />
         public bool CanHandleType(Type t)
         {
             if (cachedHandleableTypes.ContainsKey(t))
@@ -71,6 +73,7 @@ namespace SolrNet.Impl.FieldParsers {
             return false;
         }
 
+        /// <inheritdoc />
         public object Parse(XElement field, Type t) {
             var parser = GetParser(t, field.Name.LocalName);
             if (parser == null)

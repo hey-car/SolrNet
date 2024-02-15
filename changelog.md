@@ -1,4 +1,24 @@
 # Change Log
+
+## 1.1.1
+
+- Fix typo in "router.field" parameter #595 (@Jure-BB)
+
+## 1.1.0
+ - Add LightInject support (@jevgenigeurtsen)
+ - Support basic auth in non-async operations (@jevgenigeurtsen)
+ - Fix commitWithin for atomic updates (@SirMrDexter)
+ - Fix reuse of HttpClients in MS DI (@hoerup)
+ - Fix issue with large requests (@deefco)
+ - Fix getting error message with POST requests (@pmuessig)
+ - Fix edge case with POST requests (@pmuessig)
+ - Fix parsing of dynamic fields from schema (@yokuno)
+ - Fix parsing of extract response (@ancailliau)
+ - Improve MS DI integration (@bernarden)
+ - Drop SolrNet.DSL project
+ - Drop NHibernate.SolrNet project
+ - Revamped integration tests and build scripts
+
 ## 1.0.19 (2019-11-21)
 - Support overriding the default wt=xml parameter in order to support JSON response. #509 (@LCHarold)
 

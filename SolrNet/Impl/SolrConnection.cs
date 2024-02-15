@@ -24,7 +24,6 @@ using HttpWebAdapters;
 using HttpWebAdapters.Adapters;
 using SolrNet.Exceptions;
 using SolrNet.Utils;
-using HttpUtility = SolrNet.Utils.HttpUtility;
 using System.Threading.Tasks;
 using System.Threading;
 
@@ -52,12 +51,21 @@ namespace SolrNet.Impl
         /// Manages HTTP connection with Solr
         /// </summary>
         /// <param name="serverURL">URL to Solr</param>
-        public SolrConnection(string serverURL)
+        public SolrConnection(string serverURL) : this(serverURL, new HttpWebRequestFactory())
+        {
+        }
+
+        /// <summary>
+        /// Manages HTTP connection with Solr
+        /// </summary>
+        /// <param name="serverURL">URL to Solr</param>
+        /// <param name="httpWebRequestFactory">Request factory to be used in synchronous fallback connections</param>
+        public SolrConnection(string serverURL, IHttpWebRequestFactory httpWebRequestFactory)
         {
             ServerURL = serverURL;
             Timeout = -1;
             Cache = new NullCache();
-            HttpWebRequestFactory = new HttpWebRequestFactory();
+            HttpWebRequestFactory = httpWebRequestFactory;
         }
 
         /// <summary>
@@ -86,6 +94,7 @@ namespace SolrNet.Impl
         /// </summary>
         public int Timeout { get; set; }
 
+        /// <inheritdoc />
         public string Post(string relativeUrl, string s)
         {
             var bytes = Encoding.UTF8.GetBytes(s);
@@ -93,6 +102,7 @@ namespace SolrNet.Impl
                 return PostStream(relativeUrl, "text/xml; charset=utf-8", content, null);
         }
 
+        /// <inheritdoc />
         public async Task<string> PostAsync(string relativeUrl, string s)
         {
             var bytes = Encoding.UTF8.GetBytes(s);
@@ -123,6 +133,7 @@ namespace SolrNet.Impl
             return request;
         }
 
+        /// <inheritdoc />
         public string PostStream(string relativeUrl, string contentType, Stream content, IEnumerable<KeyValuePair<string, string>> parameters)
         {
 
@@ -149,6 +160,7 @@ namespace SolrNet.Impl
             }
         }
 
+        /// <inheritdoc />
         public async Task<string> PostStreamAsync(string relativeUrl, string contentType, Stream content, IEnumerable<KeyValuePair<string, string>> parameters)
         {
             var request = PreparePostStreamWebRequest(relativeUrl, contentType, content, parameters);
@@ -205,6 +217,8 @@ namespace SolrNet.Impl
             }
             return (request, u,cached);
         }
+        
+        /// <inheritdoc />
         public string Get(string relativeUrl, IEnumerable<KeyValuePair<string, string>> parameters)
         {
             var wr  = PrepareGetWebRequest(relativeUrl, parameters);
@@ -238,6 +252,7 @@ namespace SolrNet.Impl
             }
         }
 
+        /// <inheritdoc />
         public async Task<string> GetAsync(string relativeUrl, IEnumerable<KeyValuePair<string, string>> parameters, CancellationToken cancellationToken = default(CancellationToken))
         {
             var wr = PrepareGetWebRequest(relativeUrl, parameters);
@@ -291,7 +306,7 @@ namespace SolrNet.Impl
             }
 
             return string.Join("&", param
-                .Select(kv => KV.Create(HttpUtility.UrlEncode(kv.Key), HttpUtility.UrlEncode(kv.Value)))
+                .Select(kv => KV.Create(WebUtility.UrlEncode(kv.Key), WebUtility.UrlEncode(kv.Value)))
                 .Select(kv => string.Format("{0}={1}", kv.Key, kv.Value))
                 .ToArray());
         }

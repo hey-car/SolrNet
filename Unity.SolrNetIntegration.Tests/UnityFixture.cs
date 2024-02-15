@@ -32,7 +32,7 @@ namespace Unity.SolrNetIntegration.Tests {
 
                 var solrConnection = (SolrConnection) container.Resolve<ISolrConnection>(instanceKey);
 
-                Assert.Equal("http://localhost:8983/solr/collection1", solrConnection.ServerURL);
+                Assert.Equal("http://localhost:8983/solr/techproducts/collection1", solrConnection.ServerURL);
             }
         }
 
@@ -103,7 +103,8 @@ namespace Unity.SolrNetIntegration.Tests {
         }
 
         internal static IUnityContainer SetupContainer() {
-            var solrConfig = (SolrConfigurationSection) ConfigurationManager.GetSection("solr");
+            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            var solrConfig = (SolrConfigurationSection) config.GetSection("solr");
             var container = new UnityContainer();
             new SolrNetContainerConfiguration().ConfigureContainer(solrConfig.SolrServers, container);
             return container;

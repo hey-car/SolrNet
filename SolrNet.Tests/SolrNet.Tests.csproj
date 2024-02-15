@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net46</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Resources\collapseResponse.xml" />
@@ -138,25 +138,18 @@
     <EmbeddedResource Include="Resources\solrSchemaNoUniqueKey.xml" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="System.Configuration" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="CommonServiceLocator" Version="2.0.2" />
     <PackageReference Include="Castle.Core" Version="4.2.1" />
     <PackageReference Include="Castle.Windsor" Version="4.1.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />
-    <PackageReference Include="xunit" Version="2.3.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+    <PackageReference Include="Hedgehog" Version="0.10.0" />
+    <PackageReference Include="Hedgehog.Experimental" Version="0.4.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SolrNet\SolrNet.csproj">
-      <Name>SolrNet</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Castle.Facilities.SolrNetIntegration\Castle.Facilities.SolrNetIntegration.csproj">
-      <Name>Castle.Facilities.SolrNetIntegration</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SolrNet.Tests.Common\SolrNet.Tests.Common.csproj">
-      <Name>SolrNet.Tests.Common</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\SolrNet\SolrNet.csproj" />
+    <ProjectReference Include="..\Castle.Facilities.SolrNetIntegration\Castle.Facilities.SolrNetIntegration.csproj" />
+    <ProjectReference Include="..\SolrNet.Tests.Common\SolrNet.Tests.Common.csproj" />
   </ItemGroup>
 </Project>

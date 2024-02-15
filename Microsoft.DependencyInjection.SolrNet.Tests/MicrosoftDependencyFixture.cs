@@ -17,11 +17,10 @@
 using System;
 using Xunit;
 using SolrNet;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using SolrNet.Impl;
 using System.Collections.Generic;
-using System.Linq;
+using System.Text.RegularExpressions;
 using SolrNet.Microsoft.DependencyInjection;
 
 namespace Microsoft.DependencyInjection.SolrNet.Tests
@@ -38,7 +37,7 @@ namespace Microsoft.DependencyInjection.SolrNet.Tests
 
             var sc = new ServiceCollection();
 
-            sc.AddSolrNet("http://localhost:8983/solr");
+            sc.AddSolrNet("http://localhost:8983/solr/techproducts");
             DefaultServiceProvider = sc.BuildServiceProvider();
         }
 
@@ -108,38 +107,85 @@ namespace Microsoft.DependencyInjection.SolrNet.Tests
         }
 
         [Fact]
+        public void ServiceCollectionIsRequired()
+        {
+            var expectedMessage = new Regex("Value cannot be null.*services");
+
+            var exception1 = Assert.Throws<ArgumentNullException>(() => ServiceCollectionExtensions.AddSolrNet(null, "http://bar.com"));
+            var exception2 = Assert.Throws<ArgumentNullException>(() => ServiceCollectionExtensions.AddSolrNet<Entity>(null, "http://bar.com"));
+
+            Assert.Matches(expectedMessage, exception1.Message);
+            Assert.Matches(expectedMessage, exception2.Message);
+        }
+
+        [Fact]
+        public void UrlIsRequired()
+        {
+            var sc = new ServiceCollection();
+            var expectedMessage = new Regex("Value cannot be null.*url");
+            
+            var exception1 = Assert.Throws<ArgumentNullException>(() => sc.AddSolrNet((string) null));
+            var exception2 = Assert.Throws<ArgumentNullException>(() => sc.AddSolrNet<Entity>((string) null));
+
+            Assert.Matches(expectedMessage, exception1.Message);
+            Assert.Matches(expectedMessage, exception2.Message);
+        }
+
+        [Fact]
+        public void UrlRetrieverIsRequired()
+        {
+            var sc = new ServiceCollection();
+            var expectedMessage = new Regex("Value cannot be null.*urlRetriever");
+
+            var exception1 = Assert.Throws<ArgumentNullException>(() => sc.AddSolrNet((Func<IServiceProvider, string>) null));
+            var exception2 = Assert.Throws<ArgumentNullException>(() => sc.AddSolrNet<Entity>((Func<IServiceProvider, string>) null));
+
+            Assert.Matches(expectedMessage, exception1.Message);
+            Assert.Matches(expectedMessage, exception2.Message);
+        }
+
+        [Fact]
+        public void UrlRetrieverMustReturnValidUrl()
+        {
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddSolrNet(sp => null);
+            var serviceProvider = serviceCollection.BuildServiceProvider();
+            var expectedMessage = new Regex("Value cannot be null.*solrUrl");
+
+            var exception = Assert.Throws<ArgumentNullException>(() => serviceProvider.GetService<ISolrOperations<Entity>>());
+       
+            Assert.Matches(expectedMessage, exception.Message);
+        }
+
+        [Fact]
         public void OnlyOneNonTypedAllowed()
         {
-
             var sc = new ServiceCollection();
             sc.AddSolrNet("http://foo.com");
             var exception = Assert.Throws<InvalidOperationException>(() => sc.AddSolrNet("http://bar.com"));
 
-            Assert.Contains("Only one Non-typed Solr Core", exception.Message);
+            Assert.Contains("Only one non-typed Solr Core", exception.Message);
         }
-
 
         [Fact]
         public void NoDuplicateTypesAllowed()
         {
-
             var sc = new ServiceCollection();
             sc.AddSolrNet<Entity>("http://foo.com");
             sc.AddSolrNet<Object>("http://whatever.com");
             var exception = Assert.Throws<InvalidOperationException>(() => sc.AddSolrNet<Entity>("http://bar.com"));
 
-            Assert.Equal($"SolrNet was already addd for model of type {nameof(Entity)}", exception.Message);
+            Assert.Equal($"SolrNet was already added for model of type {nameof(Entity)}", exception.Message);
         }
 
         [Fact]
         public void NonTypedBeforeTyped()
         {
-
             var sc = new ServiceCollection();
             sc.AddSolrNet<Entity>("http://foo.com");
             var exception = Assert.Throws<InvalidOperationException>(() => sc.AddSolrNet("http://bar.com"));
 
-            Assert.Contains("Only one Non-typed Solr Core", exception.Message);
+            Assert.Contains("Only one non-typed Solr Core", exception.Message);
         }
 
 
@@ -154,7 +200,7 @@ namespace Microsoft.DependencyInjection.SolrNet.Tests
             //in base64
             var credentialsBase64 = Convert.ToBase64String(credentials);
             //use the options to set the Authorization header.
-            sc.AddSolrNet("http://localhost:8983/solr", options => { options.HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentialsBase64); });
+            sc.AddSolrNet("http://localhost:8983/solr/techproducts", options => { options.HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentialsBase64); });
 
             //test
             var provider = sc.BuildServiceProvider();
@@ -174,7 +220,7 @@ namespace Microsoft.DependencyInjection.SolrNet.Tests
             //in base64
             var credentialsBase64 = Convert.ToBase64String(credentials);
             //use the options to set the Authorization header.
-            sc.AddSolrNet<string>("http://localhost:8983/solr", options => { options.HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentialsBase64); });
+            sc.AddSolrNet<string>("http://localhost:8983/solr/techproducts", options => { options.HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentialsBase64); });
 
             //test
             var provider = sc.BuildServiceProvider();

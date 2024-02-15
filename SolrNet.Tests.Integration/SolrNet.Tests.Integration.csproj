@@ -1,60 +1,37 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net46</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Windows.Forms" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommonServiceLocator" Version="2.0.2" />
     <PackageReference Include="Castle.Core" Version="4.2.1" />
     <PackageReference Include="Castle.Windsor" Version="4.1.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />
-    <PackageReference Include="xunit" Version="2.3.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+    <PackageReference Include="LightInject" Version="4.1.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
   </ItemGroup>
  
   <ItemGroup>
-    <ProjectReference Include="..\CommonServiceLocator.SolrNet.Cloud\CommonServiceLocator.SolrNet.Cloud.csproj">
-      <Name>CommonServiceLocator.SolrNet.Cloud</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SolrNet.Cloud\SolrNet.Cloud.csproj">
-      <Project>{bda98c34-3b00-4b1f-b850-9c776fede8e3}</Project>
-      <Name>SolrNet.Cloud</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\CommonServiceLocator.SolrNet\CommonServiceLocator.SolrNet.csproj">
-      <Name>CommonServiceLocator.SolrNet</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SolrNet.Tests.Common\SolrNet.Tests.Common.csproj">
-      <Name>SolrNet.Tests.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SolrNet\SolrNet.csproj">
-      <Name>SolrNet</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Unity.SolrNetCloudIntegration\Unity.SolrNetCloudIntegration.csproj">
-      <Name>Unity.SolrNetCloudIntegration</Name>
-    </ProjectReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="exampledocs\hd.xml" />
-    <Content Include="exampledocs\ipod_other.xml" />
-    <Content Include="exampledocs\ipod_video.xml" />
-    <Content Include="exampledocs\mem.xml" />
-    <Content Include="exampledocs\monitor.xml" />
-    <Content Include="exampledocs\monitor2.xml" />
-    <Content Include="exampledocs\mp500.xml" />
-    <Content Include="exampledocs\sd500.xml" />
-    <Content Include="exampledocs\solr.xml" />
-    <Content Include="exampledocs\utf8-example.xml" />
-    <Content Include="exampledocs\vidcard.xml" />
+    <ProjectReference Include="..\CommonServiceLocator.SolrNet.Cloud\CommonServiceLocator.SolrNet.Cloud.csproj" />
+    <ProjectReference Include="..\LightInject.SolrNet\LightInject.SolrNet.csproj" />
+    <ProjectReference Include="..\SolrNet.Cloud\SolrNet.Cloud.csproj" />
+    <ProjectReference Include="..\CommonServiceLocator.SolrNet\CommonServiceLocator.SolrNet.csproj" />
+    <ProjectReference Include="..\SolrNet.Tests.Common\SolrNet.Tests.Common.csproj" />
+    <ProjectReference Include="..\SolrNet\SolrNet.csproj" />
+    <ProjectReference Include="..\Unity.SolrNetCloudIntegration\Unity.SolrNetCloudIntegration.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="app.config">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
- 
+  <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
+    <Copy SourceFiles="App.config" DestinationFiles="$(OutDir)\testhost.dll.config" />
+    <Copy SourceFiles="App.config" DestinationFiles="$(OutDir)\testhost.x86.dll.config" />
+    <Copy SourceFiles="App.config" DestinationFiles="$(OutDir)\ReSharperTestRunner64.dll.config" />
+  </Target> 
 </Project>

@@ -28,15 +28,20 @@ namespace SolrNet.Impl.FieldSerializers {
         private readonly IEnumerable<ISolrFieldSerializer> serializers;
         private readonly ConcurrentDictionary<Type, ISolrFieldSerializer> cachedSerializerCache;
 
+        /// <summary>
+        /// Aggregates <see cref="ISolrFieldSerializer"/>s
+        /// </summary>
         public AggregateFieldSerializer(IEnumerable<ISolrFieldSerializer> serializers) {
             this.serializers = serializers;
             this.cachedSerializerCache = new ConcurrentDictionary<Type, ISolrFieldSerializer>();
         }
 
+        /// <inheritdoc />
         public bool CanHandleType(Type t) {
             return GetSerializer(t) != null;
         }
 
+        /// <inheritdoc />
         public IEnumerable<PropertyNode> Serialize(object obj) {
             if (obj == null)
                 return null;

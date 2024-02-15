@@ -39,7 +39,7 @@ namespace Ninject.Integration.SolrNet.Tests
             var solrServers = new SolrServers {
                 new SolrServerElement {
                     Id = "default",
-                    Url = "http://localhost:8983/solr",
+                    Url = "http://localhost:8983/solr/techproducts",
                     DocumentType = typeof(Entity).AssemblyQualifiedName,
                 }
             };
@@ -51,7 +51,9 @@ namespace Ninject.Integration.SolrNet.Tests
         [Fact]
         public void Resolve_MultiCore_FromConfig()
         {
-            var solrConfig = (SolrConfigurationSection)ConfigurationManager.GetSection("solr");
+            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            
+            var solrConfig = (SolrConfigurationSection)config.GetSection("solr");
             kernel.Load(new SolrNetModule(solrConfig.SolrServers));
 
             var solrOperations = kernel.Get<ISolrOperations<Entity>>();
@@ -67,12 +69,12 @@ namespace Ninject.Integration.SolrNet.Tests
             var solrServers = new SolrServers {
                 new SolrServerElement {
                     Id = "core-0",
-                    Url = "http://localhost:8983/solr/core0",
+                    Url = "http://localhost:8983/solr/techproducts/core0",
                     DocumentType = typeof(Entity).AssemblyQualifiedName,
                 },
                 new SolrServerElement {
                     Id = "core-1",
-                    Url = "http://localhost:8983/solr/core1",
+                    Url = "http://localhost:8983/solr/techproducts/core1",
                     DocumentType = typeof(Entity).AssemblyQualifiedName,
                 }
             };
@@ -89,12 +91,12 @@ namespace Ninject.Integration.SolrNet.Tests
             var solrServers = new SolrServers {
                 new SolrServerElement {
                     Id = "core-0",
-                    Url = "http://localhost:8983/solr/core0",
+                    Url = "http://localhost:8983/solr/techproducts/core0",
                     DocumentType = typeof(Entity).AssemblyQualifiedName,
                 },
                 new SolrServerElement {
                     Id = "core-1",
-                    Url = "http://localhost:8983/solr/core1",
+                    Url = "http://localhost:8983/solr/techproducts/core1",
                     DocumentType = typeof(Entity).AssemblyQualifiedName,
                 }
             };

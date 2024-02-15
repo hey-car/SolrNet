@@ -6,10 +6,13 @@ using System.Configuration;
 using Xunit;
 using SolrNet;
 using Unity.SolrNetIntegration.Config;
+using Xunit.Abstractions;
 
 namespace Unity.SolrNetIntegration.Tests {
     [Trait("Category","Integration")]
     public class UnityIntegrationFixture {
+        private readonly ITestOutputHelper testOutputHelper;
+
         internal static readonly SolrServers TestServers = new SolrServers {
             new SolrServerElement {
                 Id = "entity",
@@ -28,14 +31,20 @@ namespace Unity.SolrNetIntegration.Tests {
             },
         };
 
+        public UnityIntegrationFixture(ITestOutputHelper testOutputHelper)
+        {
+            this.testOutputHelper = testOutputHelper;
+        }
+
         [Fact]
         public void Ping_And_Query()
         {
-            using (var container = UnityFixture.SetupContainer())
+            using (var container = new UnityContainer())
             {
+                new SolrNetContainerConfiguration().ConfigureContainer(TestServers, container);
                 var solr = container.Resolve<ISolrOperations<Entity>>();
                 solr.Ping();
-                Console.WriteLine(solr.Query(SolrQuery.All).Count);
+                testOutputHelper.WriteLine(solr.Query(SolrQuery.All).Count.ToString());
             }
         }
 
@@ -63,8 +72,7 @@ namespace Unity.SolrNetIntegration.Tests {
                 solr.Add(new Dictionary<string, object> {
                     {"id", "5"},
                     {"manu", "who knows"},
-                    {"popularity", 55},
-                    {"timestamp", DateTime.UtcNow},
+                    {"popularity", 55}
                 });
             }
         }

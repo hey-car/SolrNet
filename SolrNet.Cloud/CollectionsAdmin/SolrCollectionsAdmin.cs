@@ -31,8 +31,8 @@ namespace SolrNet.Cloud.CollectionsAdmin {
             int? replicationFactor = null,
             string createNodeSet = null,
             bool? createNodeSetShuffle = null,
-            string rooterField = null,
-            IDictionary<string, string> coreProperties = null,
+            string routerField = null,
+            IReadOnlyDictionary<string, string> coreProperties = null,
             bool? autoAddReplicas = null,
             string rule = null,
             string snitch = null)
@@ -48,7 +48,7 @@ namespace SolrNet.Cloud.CollectionsAdmin {
                 .AddOptional("replicationFactor", replicationFactor)
                 .AddOptional("createNodeSet", createNodeSet)
                 .AddOptional("createNodeSet.shuffle", createNodeSetShuffle)
-                .AddOptional("rooter.field", rooterField)
+                .AddOptional("router.field", routerField)
                 .AddOptional(CORE_PROPERTY_KEY_PREFIX, coreProperties)
                 .AddOptional("autoAddReplicas", autoAddReplicas)
                 .AddOptional("rule", rule)
@@ -70,7 +70,7 @@ namespace SolrNet.Cloud.CollectionsAdmin {
             string collection, 
             string shard,
             string createNodeSet = null,
-            IDictionary<string, string> coreProperties = null)
+            IReadOnlyDictionary<string, string> coreProperties = null)
         {
             var solrParams = new SolrParams()
                 .AddRequired("action", "createshard")
@@ -161,7 +161,7 @@ namespace SolrNet.Cloud.CollectionsAdmin {
             string shard,
             string ranges = null,
             string splitKey = null,
-            IDictionary<string, string> coreProperties = null)
+            IReadOnlyDictionary<string, string> coreProperties = null)
         {
             var solrParams = new SolrParams()
                 .AddRequired("action", "SPLITSHARD")
@@ -224,7 +224,7 @@ namespace SolrNet.Cloud.CollectionsAdmin {
             string node = null,
             bool? instanceDir = null,
             bool? dataDir = null,
-            IDictionary<string, string> coreProperties = null)
+            IReadOnlyDictionary<string, string> coreProperties = null)
         {
             var solrParams = new SolrParams()
                 .AddRequired("action", "ADDREPLICA")
@@ -256,7 +256,7 @@ namespace SolrNet.Cloud.CollectionsAdmin {
            string targetCollection,
            string splitKey,
            int? forwardTimeout = null,
-           IDictionary<string, string> coreProperties = null)
+           IReadOnlyDictionary<string, string> coreProperties = null)
         {
             var solrParams = new SolrParams()
                 .AddRequired("action", "MIGRATE")

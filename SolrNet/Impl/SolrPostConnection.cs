@@ -25,11 +25,29 @@ namespace SolrNet.Impl
         /// </summary>
         public IHttpWebRequestFactory HttpWebRequestFactory { get; set; }
 
-        public PostSolrConnection(ISolrConnection conn, string serverUrl)
+        /// <summary>
+        /// Manages HTTP connection with Solr using HTTP POST.
+        /// 
+        /// Note that this constructor uses <see cref="HttpWebAdapters.HttpWebRequestFactory"/> and thus doesn't support basic authentication and such
+        /// Please use <see cref="PostSolrConnection(ISolrConnection, string, IHttpWebRequestFactory)"/>
+        /// </summary>
+        /// <param name="conn">SolrConnection instance to handle HTTP requests</param>
+        /// <param name="serverUrl">URL to Solr</param>
+        public PostSolrConnection(ISolrConnection conn, string serverUrl) : this(conn, serverUrl, new HttpWebRequestFactory())
+        {
+        }
+
+        /// <summary>
+        /// Manages HTTP connection with Solr using HTTP POST.
+        /// </summary>
+        /// <param name="conn">SolrConnection instance to handle HTTP requests</param>
+        /// <param name="serverUrl">URL to Solr</param>
+        /// <param name="httpWebRequestFactory">Request factory to be used in HTTP requests</param>
+        public PostSolrConnection(ISolrConnection conn, string serverUrl, IHttpWebRequestFactory httpWebRequestFactory)
         {
             this.conn = conn;
             this.serverUrl = serverUrl;
-            HttpWebRequestFactory = new HttpWebRequestFactory();
+            this.HttpWebRequestFactory = httpWebRequestFactory;
         }
 
         /// <summary>
@@ -40,11 +58,13 @@ namespace SolrNet.Impl
             get { return serverUrl; }
         }
 
+        /// <inheritdoc />
         public string Post(string relativeUrl, string s)
         {
             return conn.Post(relativeUrl, s);
         }
 
+        /// <inheritdoc />
         public Task<string> PostAsync(string relativeUrl, string s)
         {
             return conn.PostAsync(relativeUrl, s);
@@ -64,7 +84,7 @@ namespace SolrNet.Impl
 
             param.Add(KV.Create("wt", "xml"));
             var qs = string.Join("&", param
-                  .Select(kv => string.Format("{0}={1}", HttpUtility.UrlEncode(kv.Key), HttpUtility.UrlEncode(kv.Value)))
+                  .Select(kv => string.Format("{0}={1}", WebUtility.UrlEncode(kv.Key), WebUtility.UrlEncode(kv.Value)))
                   .ToArray());
 
             request.ContentLength = Encoding.UTF8.GetByteCount(qs);
@@ -74,6 +94,7 @@ namespace SolrNet.Impl
             return (request, qs);
         }
 
+        /// <inheritdoc />
         public string Get(string relativeUrl, IEnumerable<KeyValuePair<string, string>> parameters)
         {
             var g = PrepareGet(relativeUrl, parameters);
@@ -93,6 +114,7 @@ namespace SolrNet.Impl
             }
         }
 
+        /// <inheritdoc />
         public async Task<string> GetAsync(string relativeUrl, IEnumerable<KeyValuePair<string, string>> parameters, CancellationToken cancellationToken = default(CancellationToken))
         {
             var g = PrepareGet(relativeUrl, parameters);
@@ -112,12 +134,13 @@ namespace SolrNet.Impl
             }
         }
 
-
+        /// <inheritdoc />
         public string PostStream(string relativeUrl, string contentType, System.IO.Stream content, IEnumerable<KeyValuePair<string, string>> getParameters)
         {
             return conn.PostStream(relativeUrl, contentType, content, getParameters);
         }
 
+        /// <inheritdoc />
         public Task<string> PostStreamAsync(string relativeUrl, string contentType, System.IO.Stream content, IEnumerable<KeyValuePair<string, string>> getParameters)
         {
             return conn.PostStreamAsync(relativeUrl, contentType, content, getParameters);
